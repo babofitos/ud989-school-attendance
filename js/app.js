@@ -29,12 +29,6 @@ $(function() {
             'Gregory the Goat', 
             'Adam the Anaconda'
         ],
-        daysMissed: function(student) {
-            var data = JSON.parse(localStorage.attendance); 
-            return 12 - data.student.filter(function(day) {
-                return day === true;
-            }).length;
-        },
         getAllAttendance: function() {
             return JSON.parse(localStorage.attendance);
         },
@@ -46,7 +40,6 @@ $(function() {
     var attendanceView = {
         init: function() {
             this.$tbody = $('table tbody');
-            this.attendance = octopus.getAttendance();
             this.$nameCol = $('.name-col');
             this.render();
         },
@@ -64,23 +57,17 @@ $(function() {
             tr.append(tdAttend);
         },
         render: function() {
-            this.renderThs();
+            this.attendance = octopus.getAttendance();
+            this.$tbody.empty();
             this.renderTds();
-            
-        },
-        renderThs: function() {
-            var ths = [];
-            for (var i=1;i<13;i++) {
-                var th = $('<th/>', {
-                    text: i
-                });
-                ths.push(th);
-            }
-            this.$nameCol.after(ths);
         },
         renderTds: function() {
             for (var prop in this.attendance) {
                 if (this.attendance.hasOwnProperty(prop)) {
+                    var days = this.attendance[prop];
+                    var daysMissed = 12 - days.filter(function(day) {
+                        return day === true;
+                    }).length;
                     var tdName = $('<td/>', {
                         class: 'name-col',
                         text: prop
@@ -88,12 +75,14 @@ $(function() {
                     var tr = $('<tr/>', {
                         class: 'student'
                     });
-
+                    var tdDaysMissed = $('<td/>', {
+                        class: 'missed-col',
+                        text: daysMissed
+                    });
                     tr.append(tdName);
-
                     this.attendance[prop].forEach(this.makeCheckboxes.bind(undefined, tr));
+                    tr.append(tdDaysMissed);
                     this.$tbody.append(tr);
-                    
                 }
             }
         }
@@ -112,7 +101,7 @@ $(function() {
         },
         updateAttendance: function() {
             var data = {};
-            var attendance = model.getAllAttendance();
+            var attendance = this.getAttendance();
             $('.student').each(function(index) {
                 var $children = $(this).children();
                 var studentName = $children.eq(0).text();
@@ -123,6 +112,7 @@ $(function() {
                 
             });
             model.setAttendance(data);
+            attendanceView.render();
         }
     };
     octopus.init();
